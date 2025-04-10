@@ -1,3 +1,23 @@
+from PIL import ExifTags
+
+def auto_rotate(image):
+    try:
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation] == 'Orientation':
+                break
+        exif = image._getexif()
+        if exif is not None:
+            orientation_value = exif.get(orientation, None)
+            if orientation_value == 3:
+                image = image.rotate(180, expand=True)
+            elif orientation_value == 6:
+                image = image.rotate(270, expand=True)
+            elif orientation_value == 8:
+                image = image.rotate(90, expand=True)
+    except Exception as e:
+        pass  # EXIF not present or error reading it
+    return image
+
 
 import streamlit as st
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
@@ -155,7 +175,7 @@ st.caption("Upload a photo and preview all effects in one view. Click to downloa
 uploaded_file = st.file_uploader("📤 Upload an image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
-    image = Image.open(uploaded_file).convert("RGB")
+    image = auto_rotate(Image.open(uploaded_file)).convert("RGB")
     st.subheader("🎨 Style Previews")
 
     cols = st.columns(3)
